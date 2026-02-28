@@ -36,6 +36,8 @@ return
 *z::
     toggle := !toggle
     SendInput, % toggle ? "{2}" : "{3}"
+    shiftEnabled := true
+    shiftHeld := false
 return
 
 ; F1 types the string quickly.
@@ -49,20 +51,20 @@ return
 shiftEnabled := false
 shiftHeld    := false
 
-; Alt always turns mode OFF
+; Alt disables hold functionality and turns off toggle
 ~*LAlt::
     if (!enabled)
         return
+    toggle := false
     shiftEnabled := false
     shiftHeld := false
     SendInput, {1}
 return
 
-; LButton always turns mode ON (and acts as hold-modifier when ON)
+; LButton only acts as hold-modifier when shift mode is enabled
 ~*LButton::
-    if (!enabled)
+    if (!enabled || !shiftEnabled)
         return
-    shiftEnabled := true
     shiftHeld := true
 return
 
@@ -76,7 +78,7 @@ return
 ~*RButton::
     if (!enabled)
         return
-		SendInput, {e}
+        SendInput, {e}
     if (shiftEnabled && shiftHeld) {
         toggle := !toggle
         SendInput, % toggle ? "{2}" : "{3}"
@@ -84,5 +86,4 @@ return
         SendInput, {e}
     }
 return
-
 #IfWinActive
