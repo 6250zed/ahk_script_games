@@ -1,22 +1,11 @@
 #NoEnv
 #SingleInstance Force
-#InstallKeybdHook
+#InstallMouseHook
 #UseHook On
-SendMode event
+SendMode Event
 SetTitleMatchMode, 2
 
-enabled := true      ; true = active, false = disabled
-toggle  := false     ; false -> send 4, true -> send 3
-
-; ---- Global toggle ----
-XButton2::
-    enabled := !enabled
-    Tooltip, % (enabled ? "ENABLED" : "DISABLED")
-    SetTimer, RemoveTip, -1000
-return
-
-; ---- Global exit (works anywhere) ----
-^+Esc::ExitApp
+shiftMode := false   ; true only while RButton is physically held
 
 RemoveTip:
     Tooltip
@@ -24,43 +13,21 @@ return
 
 #IfWinActive ahk_exe gunz.exe
 
-; tab, a,s, and x moves left-forward-back-right and also sends 1
-
-*tab::tab
-*a::a
-*s::s
-*c::c
-return
-; Alt key also sends 1.
-~*LAlt::
-    if (!enabled)
-        return
-    SendInput, {1}
+; RButton acts as a temporary modifier (momentary shift mode).
+~*RButton::
+    shiftMode := true
 return
 
-; LButton also sends r.
+~*RButton Up::
+    shiftMode := false
+return
+
+; LButton does different output based on the temporary shift state.
 ~*LButton::
-    if (!enabled)
-        return
-    SendInput, {r}
-return
-
-; x alternates between 2 and 3.
-*x::
-    if (!enabled)
-        return
-    toggle := !toggle
-    SendInput, % toggle ? "{2}" : "{3}"
-return
-
-; \ types the string slowly.
-\::
-    delayMs := 200  ; delay between sends
-
-    ; send as literal text
-    SendInput, {Text}J3522722554
-
-    Sleep, %delayMs%
+    if (shiftMode)
+        SendInput, {2}
+    else
+        SendInput, {r}
 return
 
 #IfWinActive
