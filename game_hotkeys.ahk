@@ -1,12 +1,15 @@
 #NoEnv
 #SingleInstance Force
-#InstallKeybdHook
+#InstallMouseHook
 #UseHook On
-SendMode event
+#MaxHotkeysPerInterval 200
+#HotkeyInterval 2000
+
+SendMode Event
 SetTitleMatchMode, 2
 
 enabled := true      ; true = active, false = disabled
-toggle  := false     ; false -> send 4, true -> send 3
+toggle  := false     ; false -> send 3, true -> send 2
 
 ; ---- Global toggle ----
 XButton2::
@@ -24,69 +27,62 @@ return
 
 #IfWinActive ahk_exe gunz.exe
 
-; tab, a,s, and x moves left-forward-back-right and also sends 1
-
 *tab::tab
 *a::a
 *s::s
 *c::c
 return
 
-; Alt key also sends 1.
-~*LAlt::
-    if (!enabled)
-        return
-    SendInput, {1}
-return
-
-; x alternates between 2 and 3.
-*x::
-    if (!enabled)
-        return
+*z::
     toggle := !toggle
     SendInput, % toggle ? "{2}" : "{3}"
 return
 
-; \ types the string slowly.
+; F1 types the string quickly.
 F1::
-    delayMs := 20  ; delay between sends
-
-    ; send as literal text
+    delayMs := 20
     SendInput, {Text}J3522722554
-
     Sleep, %delayMs%
 return
 
-shiftMode := false   ; true only while LButton is physically held
+; Mode state
+shiftEnabled := false
+shiftHeld    := false
 
-; LButton acts as a temporary modifier (momentary shift mode).
-~*LButton::
-    shiftMode := true
-return
-
-~$*LButton Up::
-    shiftMode := false
-return
-
-; RButton does different output based on the temporary shift state.
-~*RButton::
-    ; If we're disabled and we'd otherwise do the shiftMode action, bail out BEFORE Shift down.
-    if (shiftMode && !enabled)
+; Alt always turns mode OFF
+~*LAlt::
+    if (!enabled)
         return
+    shiftEnabled := false
+    shiftHeld := false
+    SendInput, {1}
+return
 
-    SendInput, {Shift down}
+; LButton always turns mode ON (and acts as hold-modifier when ON)
+~*LButton::
+    if (!enabled)
+        return
+    shiftEnabled := true
+    shiftHeld := true
+return
 
-    if (shiftMode) {
+~*LButton Up::
+    if (!enabled)
+        return
+    shiftHeld := false
+return
+
+; RButton behavior depends on ON/OFF + hold state
+~*RButton::
+    if (!enabled)
+        return
+		SendInput, {e}
+    if (shiftEnabled && shiftHeld) {
         toggle := !toggle
         SendInput, % toggle ? "{2}" : "{3}"
     } else {
-        SendInput, f
+        SendInput, {e}
     }
 return
-
-~*RButton up::
-    SendInput, {Shift up}
-return
-
 
 #IfWinActive
