@@ -31,18 +31,12 @@ return
 *s::s
 *c::c
 return
+
 ; Alt key also sends 1.
 ~*LAlt::
     if (!enabled)
         return
     SendInput, {1}
-return
-
-; LButton also sends r.
-~*LButton::
-    if (!enabled)
-        return
-    SendInput, {r}
 return
 
 ; x alternates between 2 and 3.
@@ -54,13 +48,45 @@ return
 return
 
 ; \ types the string slowly.
-\::
-    delayMs := 200  ; delay between sends
+F1::
+    delayMs := 20  ; delay between sends
 
     ; send as literal text
     SendInput, {Text}J3522722554
 
     Sleep, %delayMs%
 return
+
+shiftMode := false   ; true only while LButton is physically held
+
+; LButton acts as a temporary modifier (momentary shift mode).
+~*LButton::
+    shiftMode := true
+return
+
+~$*LButton Up::
+    shiftMode := false
+return
+
+; RButton does different output based on the temporary shift state.
+~*RButton::
+    ; If we're disabled and we'd otherwise do the shiftMode action, bail out BEFORE Shift down.
+    if (shiftMode && !enabled)
+        return
+
+    SendInput, {Shift down}
+
+    if (shiftMode) {
+        toggle := !toggle
+        SendInput, % toggle ? "{2}" : "{3}"
+    } else {
+        SendInput, f
+    }
+return
+
+~*RButton up::
+    SendInput, {Shift up}
+return
+
 
 #IfWinActive
